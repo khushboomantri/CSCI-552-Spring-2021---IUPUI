@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+
+<!--<svg width="1000" height="1000">
+</svg>-->
+
+<svg width="960" height="600"></svg>
+
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script>
+var nodes = [
+{   id: "Ravens",   name: "Ravens",   region: "AFC North",   level: "AFC" }, {   id: "Browns",   name: "Browns",   region: "AFC North",  level: "AFC" }, {   id: "Steelers",   name: "Steelers",   region: "AFC North",  level: "AFC" }, {   id: "Bengals",   name: "Bengals",   region: "AFC North",  level: "AFC" }, {   id: "Colts",   name: "Colts",   region: "AFC South",  level: "AFC" }, {   id: "Jaguars",   name: "Jaguars",   region: "AFC South",  level: "AFC" }, {   id: "Texans",   name: "Texans",   region: "AFC South",  level: "AFC" }, {   id: "Titans",   name: "Titans",   region: "AFC South",  level: "AFC" }, {   id: "Dolphine",   name: "Dolphine",   region: "AFC East",  level: "AFC" }, {   id: "Bills",   name: "Bills",   region: "AFC East",  level: "AFC" }, {   id: "Patriots",   name: "Patriots",   region: "AFC East",  level: "AFC" }, {   id: "Jets",   name: "Jets",   region: "AFC East",  level: "AFC" }, {   id: "Chiefs",   name: "Chiefs",   region: "AFC West",  level: "AFC" }, {   id: "Raiders",   name: "Raiders",   region: "AFC West",  level: "AFC" }, {   id: "Broncos",   name: "Broncos",   region: "AFC West",  level: "AFC" }, {   id: "Chargers",   name: "Chargers",   region: "AFC West",  level: "AFC" }, {   id: "Bears",   name: "Bears",   region: "NFC North",  level: "NFC" }, {   id: "Packers",   name: "Packers",   region: "NFC North",  level: "NFC" }, {   id: "Lions",   name: "Lions",   region: "NFC North",  level: "NFC" }, {   id: "Vikings",   name: "Vikings",   region: "NFC North",  level: "NFC" }, {   id: "Falcons",   name: "Falcons",   region: "NFC South",  level: "NFC" }, {   id: "Buccaneers",   name: "Buccaneers",   region: "NFC South",  level: "NFC" }, {   id: "Panthers",   name: "Panthers",   region: "NFC South",  level: "NFC" }, {   id: "Saints",   name: "Saints",   region: "NFC South",  level: "NFC" }, {   id: "Cowboys",   name: "Cowboys",   region: "NFC East",  level: "NFC" }, {   id: "Giants",   name: "Giants",   region: "NFC East",  level: "NFC" }, {   id: "Eagles",   name: "Eagles",   region: "NFC East",  level: "NFC" }, {   id: "Football Team",   name: "Football Team",   region: "NFC East",  level: "NFC" }, {   id: "Rams",   name: "Rams",   region: "NFC West",  level: "NFC" }, {   id: "49ers",   name: "49ers",   region: "NFC West",  level: "NFC" }, {   id: "Seahawks",   name: "Seahawks",   region: "NFC West",  level: "NFC" }, {   id: "Cardinals",   name: "Cardinals",   region: "NFC West",  level: "NFC" }
+]
+
+var links = [
+{   source: "Jaguars",   target: "Jets",  week:1 }, {   source: "49ers",   target: "Vikings",  week:1 }, {   source: "Ravens",   target: "Cardinals",  week:1 }, {   source: "Patriots",   target: "Dolphine",  week:1 }, {   source: "Chiefs",   target: "Buccaneers",  week:1 }, {   source: "Chargers",   target: "Packers",  week:1 }, {   source: "Bengals",   target: "Colts",  week:1 }, {   source: "Bears",   target: "Lions",  week:1 }, {   source: "Titans",   target: "Bills",  week:1 }, {   source: "Giants",   target: "Eagles",  week:1 }, {   source: "Broncos",   target: "Steelers",  week:1 }, {   source: "Falcons",   target: "Panthers",  week:1 }, {   source: "Seahawks",   target: "Rams",  week:1 }, {   source: "Saints",   target: "Football Team",  week:1 }, {   source: "49ers",   target: "Cowboys",  week:1 }, {   source: "Titans",   target: "Raiders",  week:1 }, {   source: "Steelers",   target: "Ravens",  week:2 }, {   source: "Cowboys",   target: "Chargers",  week:2 }, {   source: "Vikings",   target: "Saints",  week:2 }, {   source: "Packers",   target: "Bears",  week:2 }, {   source: "Lions",   target: "Bengals",  week:2 }, {   source: "Dolphine",   target: "Titans",  week:2 }, {   source: "Rams",   target: "Patriots",  week:2 }, {   source: "Football Team",   target: "Giants",  week:2 }, {   source: "Raiders",   target: "49ers",  week:2 }, {   source: "Buccaneers",   target: "Falcons",  week:2 }, {   source: "Colts",   target: "Titans",  week:2 }, {   source: "Eagles",   target: "Seahawks",  week:2 }, {   source: "Cardinals",   target: "Jaguars",  week:2 }, {   source: "Jets",   target: "Broncos",  week:2 }, {   source: "Bills",   target: "49ers",  week:2 }, {   source: "Panthers",   target: "Chiefs",  week:2 }, {   source: "Titans",   target: "Colts",  week:3 }, {   source: "Chargers",   target: "Vikings",  week:3 }, {   source: "Football Team",   target: "Dolphine",  week:3 }, {   source: "Eagles",   target: "Ravens",  week:3 }, {   source: "Titans",   target: "Lions",  week:3 }, {   source: "Chiefs",   target: "Bills",  week:3 }, {   source: "Rams",   target: "Cowboys",  week:3 }, {   source: "Steelers",   target: "Giants",  week:3 }, {   source: "Jaguars",   target: "49ers",  week:3 }, {   source: "Patriots",   target: "Bengals",  week:3 }, {   source: "Buccaneers",   target: "Broncos",  week:3 }, {   source: "Packers",   target: "Seahawks",  week:3 }, {   source: "Falcons",   target: "Raiders",  week:3 }, {   source: "Saints",   target: "49ers",  week:3 }, {   source: "Bears",   target: "Panthers",  week:3 }, {   source: "Jets",   target: "Cardinals",  week:3 }, {   source: "Raiders",   target: "Patriots",  week:4 }, {   source: "Seahawks",   target: "Buccaneers",  week:4 }, {   source: "Colts",   target: "Steelers",  week:4 }, {   source: "Ravens",   target: "Saints",  week:4 }, {   source: "Panthers",   target: "Packers",  week:4 }, {   source: "Lions",   target: "Jaguars",  week:4 }, {   source: "49ers",   target: "Titans",  week:4 }, {   source: "Broncos",   target: "Falcons",  week:4 }, {   source: "Cardinals",   target: "Eagles",  week:4 }, {   source: "Cowboys",   target: "Football Team",  week:4 }, {   source: "Bengals",   target: "Chargers",  week:4 }, {   source: "Dolphine",   target: "Chiefs",  week:4 }, {   source: "Giants",   target: "Rams",  week:4 }, {   source: "Bills",   target: "Jets",  week:4 }, {   source: "Vikings",   target: "Bears",  week:4 }, {   source: "Falcons",   target: "Chargers",  week:5 }, {   source: "Buccaneers",   target: "Vikings",  week:5 }, {   source: "Steelers",   target: "Cardinals",  week:5 }, {   source: "Colts",   target: "Jaguars",  week:5 }, {   source: "Chiefs",   target: "Jets",  week:5 }, {   source: "Seahawks",   target: "Patriots",  week:5 }, {   source: "Giants",   target: "49ers",  week:5 }, {   source: "Football Team",   target: "Eagles",  week:5 }, {   source: "Titans",   target: "Rams",  week:5 }, {   source: "Bengals",   target: "Ravens",  week:5 }, {   source: "Cowboys",   target: "Saints",  week:5 }, {   source: "Lions",   target: "49ers",  week:5 }, {   source: "Broncos",   target: "Panthers",  week:5 }, {   source: "Dolphine",   target: "Titans",  week:5 }, {   source: "Chargers",   target: "Buccaneers",  week:6 }, {   source: "Steelers",   target: "Bengals",  week:6 }, {   source: "Packers",   target: "Colts",  week:6 }, {   source: "Vikings",   target: "Lions",  week:6 }, {   source: "Eagles",   target: "Cowboys",  week:6 }, {   source: "Cardinals",   target: "Giants",  week:6 }, {   source: "Ravens",   target: "49ers",  week:6 }, {   source: "Jaguars",   target: "Titans",  week:6 }, {   source: "Raiders",   target: "Bills",  week:6 }, {   source: "Patriots",   target: "Titans",  week:6 }, {   source: "Bears",   target: "Falcons",  week:6 }, {   source: "Football Team",   target: "Rams",  week:6 }, {   source: "Jets",   target: "Dolphine",  week:6 }, {   source: "Seahawks",   target: "Saints",  week:6 }, {   source: "Cowboys",   target: "Giants",  week:7 }, {   source: "Packers",   target: "Vikings",  week:7 }, {   source: "Ravens",   target: "Steelers",  week:7 }, {   source: "Bears",   target: "Jaguars",  week:7 }, {   source: "Buccaneers",   target: "Panthers",  week:7 }, {   source: "Dolphine",   target: "Patriots",  week:7 }, {   source: "Saints",   target: "Eagles",  week:7 }, {   source: "49ers",   target: "Titans",  week:7 }, {   source: "Falcons",   target: "Chiefs",  week:7 }, {   source: "Jets",   target: "Raiders",  week:7 }, {   source: "Rams",   target: "Bills",  week:7 }, {   source: "Colts",   target: "Broncos",  week:7 }, {   source: "49ers",   target: "Seahawks",  week:7 }, {   source: "Chargers",   target: "Football Team",  week:7 }, {   source: "Vikings",   target: "Buccaneers",  week:8 }, {   source: "Bills",   target: "Dolphine",  week:8 }, {   source: "Titans",   target: "Steelers",  week:8 }, {   source: "Chiefs",   target: "Ravens",  week:8 }, {   source: "Bengals",   target: "Packers",  week:8 }, {   source: "Lions",   target: "Bears",  week:8 }, {   source: "Patriots",   target: "Jets",  week:8 }, {   source: "Football Team",   target: "Titans",  week:8 }, {   source: "49ers",   target: "Cardinals",  week:8 }, {   source: "Broncos",   target: "Raiders",  week:8 }, {   source: "Panthers",   target: "Chargers",  week:8 }, {   source: "Rams",   target: "49ers",  week:8 }, {   source: "Saints",   target: "Giants",  week:8 }, {   source: "Falcons",   target: "Cowboys",  week:8 }, {   source: "Bears",   target: "Rams",  week:9 }, {   source: "Raiders",   target: "Vikings",  week:9 }, {   source: "49ers",   target: "Dolphine",  week:9 }, {   source: "Cardinals",   target: "Bengals",  week:9 }, {   source: "Jaguars",   target: "Colts",  week:9 }, {   source: "Buccaneers",   target: "Jets",  week:9 }, {   source: "Packers",   target: "Lions",  week:9 }, {   source: "Chargers",   target: "Titans",  week:9 }, {   source: "Cowboys",   target: "Eagles",  week:9 }, {   source: "Chiefs",   target: "Broncos",  week:9 }, {   source: "Titans",   target: "Seahawks",  week:9 }, {   source: "49ers",   target: "Saints",  week:9 }, {   source: "Panthers",   target: "Falcons",  week:9 }, {   source: "Bills",   target: "Patriots",  week:9 }, {   source: "Bengals",   target: "Titans",  week:10 }, {   source: "Falcons",   target: "Buccaneers",  week:10 }, {   source: "Jaguars",   target: "Ravens",  week:10 }, {   source: "Eagles",   target: "Packers",  week:10 }, {   source: "Colts",   target: "Bears",  week:10 }, {   source: "Giants",   target: "Cowboys",  week:10 }, {   source: "Dolphine",   target: "Seahawks",  week:10 }, {   source: "Raiders",   target: "Chiefs",  week:10 }, {   source: "Broncos",   target: "Titans",  week:10 }, {   source: "Steelers",   target: "49ers",  week:10 }, {   source: "49ers",   target: "Football Team",  week:10 }, {   source: "Rams",   target: "Panthers",  week:10 }, {   source: "Cardinals",   target: "Bills",  week:10 }, {   source: "Lions",   target: "Chargers",  week:10 }, {  source: "Packers", target: "Buccaneers",  week:11 }, {  source: "Giants", target: "Ravens",  week:11 }, {  source: "Bills", target: "Jaguars",  week:11 }, {  source: "49ers", target: "Colts",  week:11 }, {  source: "Vikings", target: "Panthers",  week:11 }, {  source: "Steelers", target: "Eagles",  week:11 }, {  source: "Titans", target: "Raiders",  week:11 }, {  source: "Patriots", target: "Broncos",  week:11 }, {  source: "Saints", target: "Lions",  week:11 }, {  source: "Jets", target: "Chiefs",  week:11 }, {  source: "Football Team", target: "Falcons",  week:11 }, {  source: "Jaguars", target: "Packers",  week:12 }, {  source: "Eagles", target: "Saints",  week:12 }, {  source: "Chiefs", target: "Vikings",  week:12 }, {  source: "Broncos", target: "Dolphine",  week:12 }, {  source: "Cowboys", target: "Steelers",  week:12 }, {  source: "Titans", target: "Bengals",  week:12 }, {  source: "Ravens", target: "Colts",  week:12 }, {  source: "Buccaneers", target: "Lions",  week:12 }, {  source: "Seahawks", target: "Bills",  week:12 }, {  source: "Titans", target: "Patriots",  week:12 }, {  source: "Panthers", target: "Raiders",  week:12 }, {  source: "Rams", target: "Football Team",  week:12 }, {  source: "Jets", target: "Falcons",  week:12 }, {  source: "Chargers", target: "Bears",  week:12 }, {  source: "49ers", target: "Giants",  week:12 }, {  source: "Cardinals", target: "49ers",  week:12 }, {  source: "Panthers", target: "Vikings",  week:13 }, {  source: "Packers", target: "Chargers",  week:13 }, {  source: "Bengals", target: "Jaguars",  week:13 }, {  source: "Steelers", target: "Titans",  week:13 }, {  source: "Colts", target: "Lions",  week:13 }, {  source: "Chiefs", target: "Patriots",  week:13 }, {  source: "Ravens", target: "Titans",  week:13 }, {  source: "Football Team", target: "Seahawks",  week:13 }, {  source: "Cowboys", target: "49ers",  week:13 }, {  source: "Giants", target: "Bears",  week:13 }, {  source: "Bills", target: "Broncos",  week:13 }, {  source: "Raiders", target: "Jets",  week:13 }, {  source: "Eagles", target: "49ers",  week:13 }, {  source: "Dolphine", target: "Rams",  week:13 }, {  source: "Saints", target: "Cardinals",  week:13 }, {  source: "Bills",   target: "Football Team",  week:14 }, {  source: "Raiders",   target: "Buccaneers",  week:14 }, {  source: "Jaguars",   target: "Chargers",  week:14 }, {  source: "Saints",   target: "Steelers",  week:14 }, {  source: "Titans",   target: "Colts",  week:14 }, {  source: "Jets",   target: "Titans",  week:14 }, {  source: "Seahawks",   target: "Cowboys",  week:14 }, {  source: "Lions",   target: "Falcons",  week:14 }, {  source: "Bengals",   target: "Chiefs",  week:14 }, {  source: "Patriots",   target: "49ers",  week:14 }, {  source: "Bears",   target: "Packers",  week:14 }, {  source: "Vikings",   target: "Broncos",  week:14 }, {  source: "Panthers",   target: "Giants",  week:14 }, {  source: "Eagles",   target: "Rams",  week:14 }, {  source: "49ers",   target: "Dolphine",  week:14 }, {  source: "Cardinals",   target: "Ravens",  week:14 }, {  source: "Broncos",   target: "Chiefs",  week:15 }, {  source: "Dolphine",   target: "Raiders",  week:15 }, {  source: "Buccaneers",   target: "Bears",  week:15 }, {  source: "Jaguars",   target: "Bengals",  week:15 }, {  source: "Packers",   target: "Titans",  week:15 }, {  source: "Falcons",   target: "Vikings",  week:15 }, {  source: "Colts",   target: "Cardinals",  week:15 }, {  source: "Bills",   target: "Titans",  week:15 }, {  source: "Chargers",   target: "Lions",  week:15 }, {  source: "49ers",   target: "Eagles",  week:15 }, {  source: "Rams",   target: "Saints",  week:15 }, {  source: "Patriots",   target: "Football Team",  week:15 }, {  source: "Giants",   target: "Seahawks",  week:15 }, {  source: "Jets",   target: "Football Team",  week:15 }, {  source: "Ravens",   target: "Cowboys",  week:15 }, {  source: "49ers",   target: "Steelers",  week:15 }, {  source: "Lions",   target: "Panthers",  week:16 }, {  source: "Falcons",   target: "Packers",  week:16 }, {  source: "Rams",   target: "Seahawks",  week:16 }, {  source: "Titans",   target: "Chiefs",  week:16 }, {  source: "Ravens",   target: "Patriots",  week:16 }, {  source: "Cowboys",   target: "Cardinals",  week:16 }, {  source: "Steelers",   target: "Dolphine",  week:16 }, {  source: "Chargers",   target: "Colts",  week:16 }, {  source: "Vikings",   target: "Jets",  week:16 }, {  source: "Bengals",   target: "49ers",  week:16 }, {  source: "Raiders",   target: "Broncos",  week:16 }, {  source: "Buccaneers",   target: "Eagles",  week:16 }, {  source: "Football Team",   target: "49ers",  week:16 }, {  source: "Giants",   target: "Saints",  week:16 }, {  source: "Titans",   target: "Bears",  week:16 }, {  source: "Dolphine",   target: "Bills",  week:16 }, {  source: "Titans",   target: "Dolphine",  week:17 }, {  source: "Cardinals",   target: "Steelers",  week:17 }, {  source: "49ers",   target: "Ravens",  week:17 }, {  source: "Lions",   target: "Packers",  week:17 }, {  source: "Patriots",   target: "Bills",  week:17 }, {  source: "Saints",   target: "Cowboys",  week:17 }, {  source: "Vikings",   target: "Falcons",  week:17 }, {  source: "Panthers",   target: "Buccaneers",  week:17 }, {  source: "Cowboys",   target: "Chargers",  week:17 }, {  source: "Broncos",   target: "Jets",  week:17 }, {  source: "Chiefs",   target: "Raiders",  week:17 }, {  source: "Titans",   target: "Jaguars",  week:17 }, {  source: "Colts",   target: "Bengals",  week:17 }, {  source: "Seahawks",   target: "Football Team",  week:17 }, {  source: "49ers",   target: "Rams",  week:17 }, {  source: "Eagles",   target: "Giants",  week:17 }
+
+]
+
+function getNodeColor(node) {
+  return node.level === "AFC" ? 'blue' : 'red'
+}
+
+
+var width = window.innerWidth
+var height = window.innerHeight
+
+var svg = d3.select('svg')
+svg.attr('width', width).attr('height', height)
+
+    
+
+  
+
+
+
+// simulation setup with all forces
+var linkForce = d3
+  .forceLink()
+  .id(function (link) { return link.id })
+  .strength(function (link) { return link.week })
+
+var simulation = d3
+  .forceSimulation()
+  .force('link', linkForce)
+  .force('charge',  d3.forceManyBody().strength(-20000))
+  .force("center", d3.forceCenter(width / 2, height / 2))
+
+
+  
+    .alpha(0.1).restart();
+
+var linkElements = svg.append("g")
+  .attr("class", "links")
+  .selectAll("line")
+  .data(links)
+  .enter().append("line")
+    .attr("stroke-width", 1)
+	  .attr("stroke", "rgba(50, 50, 50, 0.2)")
+
+var nodeElements = svg.append("g")
+  .attr("class", "nodes")
+  .selectAll("circle")
+  .data(nodes)
+  .enter().append("circle")
+    .attr("r", 10)
+    .attr("fill", getNodeColor)
+
+var textElements = svg.append("g")
+  .attr("class", "texts")
+  .selectAll("text")
+  .data(nodes)
+  .enter().append("text")
+    .text(function (node) { return  node.name })
+	  .attr("font-size", 15)
+	  .attr("dx", 15)
+    .attr("dy", 4)
+
+simulation.nodes(nodes).on('tick', () => {
+  nodeElements
+    .attr('cx', function (node) { return node.x })
+    .attr('cy', function (node) { return node.y })
+  textElements
+    .attr('x', function (node) { return node.x })
+    .attr('y', function (node) { return node.y })
+  linkElements
+    .attr('x1', function (link) { return link.source.x })
+    .attr('y1', function (link) { return link.source.y })
+    .attr('x2', function (link) { return link.target.x })
+    .attr('y2', function (link) { return link.target.y })
+})
+
+simulation.force("link").links(links)
+</script>

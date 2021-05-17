@@ -1,0 +1,383 @@
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title></title>
+
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <script src="https://unpkg.com/topojson@3"></script>
+  <script src="https://unpkg.com/d3-delaunay@4"></script>
+  <script src="https://unpkg.com/d3-geo-voronoi@1"></script>
+ <style>
+
+body {
+  background-color: rgb(102, 115, 126);
+  text-align: center;
+  font-family: sans-serif;
+}
+
+.USA {
+  fill: #9c9696;
+}
+
+.USA_Border {
+  fill: none;
+  stroke-width: 1px;
+}
+
+.interior {
+  stroke: white;
+}
+
+.exterior {
+  stroke: #0e0000;
+}
+
+.NFL_TEAM {
+  fill: white;
+  opacity: 0.6;
+  stroke: #000000;
+}
+
+.NFL_TEAM {
+  fill: none;
+  stroke: #000000;
+  stroke-width: 1 px;
+  stroke-opacity: 0.3;
+}
+
+.voronoi {
+  fill: none;
+  stroke: none;
+  stroke-width: 1px;
+}
+
+.highlight {
+  opacity: 1 ;
+  stroke: rgb(8, 8, 8) ;
+  stroke-width: 4px ;
+  stroke-opacity: 0.8 ;
+}
+
+g#voronoi {
+  pointer-events: all;
+}
+
+#tooltip {
+  font-size: 25pt;
+  font-weight: 900;
+ }
+</style>
+</head>
+
+<body>
+
+<svg width="960" height="600">
+  <g id="basemap"></g>
+  <g id="NFL_team_Edge"></g>
+  <g id="NFL_team_Node"></g>
+  <g id="voronoi"></g>
+  <text id="tooltip" style="display: none;"></text>
+</svg>
+<script>
+
+  const svg  = d3.select("svg");
+  const projection = d3.geoAlbers().scale(1280).translate([480, 300]);
+  const width  = parseInt(svg.attr("width"));
+  const height = parseInt(svg.attr("height"));
+  const hypotenuse = Math.sqrt(width * width + height * height);
+ 
+  
+  const scales = {
+      //avg size of nodes
+      // change range to increase or decrease the avg node size
+    NFL_team_Node: d3.scaleSqrt()
+      .range([0, 15]),
+  // Edges range
+    segments: d3.scaleLinear()
+      .domain([0, hypotenuse])
+      .range([5, 30])
+  };
+  // have these already created for easier drawing
+  const g = {
+    basemap:  svg.select("g#basemap"),
+    NFL_team_Edge:  svg.select("g#NFL_team_Edge"),
+    NFL_team_Node: svg.select("g#NFL_team_Node"),
+    voronoi:  svg.select("g#voronoi")
+  };
+  console.assert(g.basemap.size()  === 1);
+  console.assert(g.NFL_team_Edge.size()  === 1);
+  console.assert(g.NFL_team_Node.size() === 1);
+  console.assert(g.voronoi.size()  === 1);
+  const tooltip = d3.select("text#tooltip");
+  console.assert(tooltip.size() === 1);
+
+  d3.json("https://cdn.jsdelivr.net/npm/us-atlas@3/states-albers-10m.json").then(drawMap);
+  const promises = [
+    d3.csv("https://raw.githubusercontent.com/khushboomantri/dataset/main/node.csv", TYPE_TEAM),
+    d3.csv("https://raw.githubusercontent.com/khushboomantri/dataset/main/edge.csv",  TYPE_EDGE)
+  ];
+   Promise.all(promises).then(processData);
+  function processData(values) {
+    console.assert(values.length === 2);
+  let NFL_team_Node = values[0];
+  let NFL_team_Edge  = values[1];
+  console.log("NFL_team_Node: " + NFL_team_Node.length);
+    console.log(" NFL_team_Edge: " + NFL_team_Edge.length);
+    let ID = new Map(NFL_team_Node.map(node => [node.ID, node]));
+
+    NFL_team_Edge.forEach(function(link) {
+      link.source = ID.get(link.Source);
+      link.target = ID.get(link.Target);
+  
+      link.source.outgoing += link.Week;
+      link.target.incoming += link.Week;
+    });
+  
+    drawNodes(NFL_team_Node);
+    drawPolygons(NFL_team_Node);
+    ID = new Map(NFL_team_Node.map(node => [node.ID, node]));
+    drawEdges(NFL_team_Node, NFL_team_Edge);
+    console.log({NFL_team_Node: NFL_team_Node});
+    console.log({NFL_team_Edge: NFL_team_Edge});
+  }
+    function drawMap(map) {
+    let USA = topojson.merge(map, map.objects.states.geometries);
+    let path = d3.geoPath();
+    g.basemap.append("path")
+      .datum(USA)
+      .attr("class", "USA")
+      .attr("d", path);
+      g.basemap.append("path")
+      .datum(topojson.mesh(map, map.objects.states, (a, b) => a !== b))
+      .attr("class", "USA_Border interior")
+      .attr("d", path);
+  }
+  
+    function drawNodes(NFL_team_Node) {
+      var color = d3.scaleOrdinal(d3.schemeCategory10)
+      .domain(["AFC North","AFC South","AFC East","AFC West","NFC North","NFC South","NFC East", "NFC West"])
+      const extent = d3.extent(NFL_team_Node, d => d.Records);
+      scales.NFL_team_Node.domain(extent);  
+      // draw NFL_TEAM bubbles
+      g.NFL_team_Node.selectAll("circle.NFL_TEAM")
+        .data(NFL_team_Node, d => d.ID)
+        .enter()
+        .append("circle")
+        .attr("r",  d => scales.NFL_team_Node(d.Records))
+        .attr("cx", d => d.x) 
+        .attr("cy", d => d.y) 
+        .attr("class", "NFL_TEAM")
+        .style("fill", function(d) { return color(d.Region); })
+        .each(function(d) {
+          d.bubble = this;
+        });
+    }
+    function generateSegments(nodes, links) {
+    let bundle = {nodes: [], links: [], paths: []};
+      bundle.nodes = nodes.map(function(d, i) {
+      d.fx = d.x;
+      d.fy = d.y;
+      return d;
+    });
+
+    function drawEdges(NFL_team_Node, NFL_team_Edge) {
+    // break each NFL_TEAM between NFL_team_Node into multiple segments
+    let bundle = generateSegments(NFL_team_Node, NFL_team_Edge);
+      let line = d3.line()
+      .curve(d3.curveBasisClosed)
+      .x(NFL_TEAM => NFL_TEAM.x)
+      .y(NFL_TEAM => NFL_TEAM.y);
+  
+    let links = g.NFL_team_Edge.selectAll("path.NFL_TEAM")
+      .data(bundle.paths)
+      .enter()
+      .append("path")
+      .attr("d", line)
+      .attr("class", "NFL_TEAM")
+      .each(function(d) {
+        d[0].NFL_team_Edge.push(this);
+        
+    
+      });
+  
+    let layout = d3.forceSimulation()
+      .alphaDecay(0.1)
+      .force("charge", d3.forceManyBody()
+        .strength(10)
+        .distanceMax(scales.NFL_team_Node.range()[1] * 2)
+      )
+      .force("link", d3.forceLink()
+        .strength(0.7)
+        .distance(0)
+      )
+      .on("tick", function(d) {
+        links.attr("d", line);
+      })
+      .on("end", function(d) {
+        console.log("layout complete");
+      });
+  
+    layout.nodes(bundle.nodes).force("link").links(bundle.links);
+  }
+  
+    links.forEach(function(d, i) {
+      let length = distance(d.source, d.target);
+        let total = Math.round(scales.segments(length));
+        let xscale = d3.scaleLinear()
+        .domain([0, total + 1]) 
+        .range([d.source.x, d.target.x]);
+      let yscale = d3.scaleLinear()
+        .domain([0, total + 1])
+        .range([d.source.y, d.target.y]);
+        let source = d.source;
+      let target = null;
+        let local = [source];
+      for (let j = 1; j <= total; j++) {
+        target = {
+          x: xscale(j),
+          y: yscale(j)
+        };
+  
+        local.push(target);
+        bundle.nodes.push(target);
+  
+        bundle.links.push({
+          source: source,
+          target: target
+        });
+  
+        source = target;
+      }
+  
+      local.push(d.target);
+        bundle.links.push({
+        source: target,
+        target: d.target
+      });
+  
+      bundle.paths.push(local);
+    });
+  
+    return bundle;
+  }
+  function isContinental(state) {
+    const id = parseInt(state.id);
+    return id < 60 && id !== 2 && id !== 15;
+  }
+  function TYPE_TEAM(NFL_TEAM) {
+    NFL_TEAM.longitude = parseFloat(NFL_TEAM.Longitude);
+    NFL_TEAM.latitude  = parseFloat(NFL_TEAM.Latitude);
+      const coords = projection([NFL_TEAM.longitude, NFL_TEAM.latitude]);
+    NFL_TEAM.x = coords[0];
+    NFL_TEAM.y = coords[1];
+    NFL_TEAM.outgoing = 0;  
+    NFL_TEAM.incoming = 0; 
+    NFL_TEAM.NFL_team_Edge = [];  
+    return NFL_TEAM;
+  }
+  function TYPE_EDGE(NFL_TEAM) {
+    NFL_TEAM.Week = parseInt(NFL_TEAM.Week);
+    return NFL_TEAM;
+  }
+  function distance(source, target) {
+    const dx2 = Math.pow(target.x - source.x, 2);
+    const dy2 = Math.pow(target.y - source.y, 2);
+  
+    return Math.sqrt(dx2 + dy2);
+  }
+  function drawPolygons(NFL_team_Node) {
+    const geojson = NFL_team_Node.map(function(NFL_TEAM) {
+      return {
+        type: "Feature",
+        properties: NFL_TEAM,
+        geometry: {
+          type: "Point",
+          coordinates: [NFL_TEAM.longitude, NFL_TEAM.latitude]
+        }
+      };
+    });
+      const polygons = d3.geoVoronoi().polygons(geojson);
+    console.log(polygons);
+    g.voronoi.selectAll("path")
+      .data(polygons.features)
+      .enter()
+      .append("path")
+      .attr("d", d3.geoPath(projection))
+      .attr("class", "voronoi")
+      .on("mouseover", function(d) {
+        let NFL_TEAM = d.properties.site.properties;
+        d3.select(NFL_TEAM.bubble)
+          .classed("highlight", true);
+        d3.selectAll(NFL_TEAM.NFL_team_Edge)
+          .classed("highlight", true)
+          .raise();
+        tooltip.style("display", null);
+        tooltip.style("visibility", "hidden");
+        tooltip.attr("text-anchor", "middle");
+        tooltip.attr("dy", -scales.NFL_team_Node(NFL_TEAM.outgoing) - 4);
+        tooltip.attr("x", NFL_TEAM.x);
+        tooltip.attr("y", NFL_TEAM.y);
+  
+        // set what to write on too tip
+        tooltip.text(NFL_TEAM.Team  + ", " + NFL_TEAM.Region);
+        // double check if the anchor needs to be changed
+        let bbox = tooltip.node().getBBox();
+        tooltip.style("visibility", "visible");
+      })
+      .on("mouseout", function(d) {
+        let NFL_TEAM = d.properties.site.properties;
+        d3.select(NFL_TEAM.bubble)
+          .classed("highlight", false);
+        d3.selectAll(NFL_TEAM.NFL_team_Edge)
+          .classed("highlight", false);
+        d3.select("text#tooltip").style("visibility", "hidden");
+      })
+      .on("dblclick", function(d) {
+      });
+  }
+  
+  function drawEdges(NFL_team_Node, NFL_team_Edge) {
+    // break each NFL_TEAM between NFL_team_Node into multiple segments
+    let bundle = generateSegments(NFL_team_Node, NFL_team_Edge);
+      let line = d3.line()
+      .curve(d3.curveLinear)
+      .x(NFL_TEAM => NFL_TEAM.x)
+      .y(NFL_TEAM => NFL_TEAM.y);
+  
+    let links = g.NFL_team_Edge.selectAll("path.NFL_TEAM")
+      .data(bundle.paths)
+      .enter()
+      .append("path")
+      .attr("d", line)
+      .attr("class", "NFL_TEAM")
+      .each(function(d) {
+        d[0].NFL_team_Edge.push(this);
+        
+    
+      });
+  
+    let layout = d3.forceSimulation()
+      .alphaDecay(0.1)
+      .force("charge", d3.forceManyBody()
+        .strength(10)
+        .distanceMax(scales.NFL_team_Node.range()[1] * 2)
+      )
+      .force("link", d3.forceLink()
+        .strength(0.7)
+        .distance(0)
+      )
+      .on("tick", function(d) {
+        links.attr("d", line);
+      })
+      .on("end", function(d) {
+        console.log("layout complete");
+      });
+  
+    layout.nodes(bundle.nodes).force("link").links(bundle.links);
+  }
+  
+  
+</script>
+</body>
+</html>
